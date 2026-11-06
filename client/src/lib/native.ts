@@ -40,6 +40,13 @@ function mimeTypeForExtension(ext: string): string {
   return mimeMap[ext.toLowerCase()] ?? "application/octet-stream";
 }
 
+export interface NativeFileMetadata {
+  name: string;
+  size: number;
+  modified: number;
+  is_file: boolean;
+}
+
 /**
  * Open native OS file picker and return a standard browser File object.
  * Returns null if the user cancelled or if not in Tauri.
@@ -49,7 +56,6 @@ export async function openNativeFile(): Promise<File | null> {
 
   try {
     const { open } = await import("@tauri-apps/plugin-dialog");
-    const { readFile } = await import("@tauri-apps/plugin-fs");
 
     const selected = await open({
       multiple: false,
@@ -98,7 +104,10 @@ export async function readNativeFileFromPath(filePath: string): Promise<File | n
     const bytes = await readFile(filePath);
     const fileName = filePath.replace(/\\/g, "/").split("/").pop() ?? "document";
     const ext = fileName.split(".").pop() ?? "";
-    return new File([bytes], fileName, { type: mimeTypeForExtension(ext) });
+    const file = new File([bytes], fileName, { type: mimeTypeForExtension(ext) });
+    // Attach absolute path property for file watching / native capabilities
+    Object.defineProperty(file, "nativePath", { value: filePath, writable: false });
+    return file;
   } catch (error) {
     // Fallback: try invoke "read_file_binary"
     try {
@@ -107,11 +116,139 @@ export async function readNativeFileFromPath(filePath: string): Promise<File | n
       const uint8 = new Uint8Array(bytes);
       const fileName = filePath.replace(/\\/g, "/").split("/").pop() ?? "document";
       const ext = fileName.split(".").pop() ?? "";
-      return new File([uint8], fileName, { type: mimeTypeForExtension(ext) });
+      const file = new File([uint8], fileName, { type: mimeTypeForExtension(ext) });
+      Object.defineProperty(file, "nativePath", { value: filePath, writable: false });
+      return file;
     } catch (fallbackError) {
       console.error("Failed to read native file from path:", filePath, error, fallbackError);
       return null;
     }
+  }
+}
+
+/**
+ * Read a chunk of bytes from a large native file without full in-memory loading
+ */
+export async function readNativeFileChunk(path: string, offset: number, length: number): Promise<Uint8Array | null> {
+  if (!isTauri()) return null;
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    const bytes = await invoke<number[]>("read_file_chunk", { path, offset, length });
+    return new Uint8Array(bytes);
+  } catch (error) {
+    console.error("Failed to read native file chunk:", error);
+    return null;
+  }
+}
+
+/**
+ * Get OS metadata for a native file
+ */
+export async function getNativeFileMetadata(path: string): Promise<NativeFileMetadata | null> {
+  if (!isTauri()) return null;
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return await invoke<NativeFileMetadata>("get_file_metadata", { path });
+  } catch (error) {
+    console.error("Failed to get native file metadata:", error);
+    return null;
+  }
+}
+
+/**
+ * Save document state (bookmarks, highlights, progress) offline on device
+ */
+export async function saveNativeDocumentState<T>(docId: string, state: T): Promise<boolean> {
+  if (!isTauri()) {
+    try {
+      localStorage.setItem(`leaf.doc.state.${docId}`, JSON.stringify(state));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("save_document_state", {
+      docId,
+      stateJson: JSON.stringify(state),
+    });
+    return true;
+  } catch (error) {
+    console.error("Failed to save native document state:", error);
+    return false;
+  }
+}
+
+/**
+ * Load offline document state (bookmarks, highlights, progress)
+ */
+export async function loadNativeDocumentState<T>(docId: string): Promise<T | null> {
+  if (!isTauri()) {
+    try {
+      const saved = localStorage.getItem(`leaf.doc.state.${docId}`);
+      return saved ? (JSON.parse(saved) as T) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    const raw = await invoke<string | null>("get_document_state", { docId });
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    console.error("Failed to load native document state:", error);
+    return null;
+  }
+}
+
+/**
+ * Start watching an open local document for external modifications
+ */
+export async function watchNativeDocumentFile(path: string): Promise<boolean> {
+  if (!isTauri()) return false;
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("watch_document_file", { path });
+    return true;
+  } catch (error) {
+    console.error("Failed to start watching document file:", error);
+    return false;
+  }
+}
+
+/**
+ * Stop watching document file
+ */
+export async function unwatchNativeDocumentFile(): Promise<boolean> {
+  if (!isTauri()) return false;
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("unwatch_document_file");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Listen for external file modifications from the native file watcher
+ */
+export async function listenForNativeFileModified(
+  onModified: (data: { path: string; timestamp: number }) => void
+): Promise<(() => void) | null> {
+  if (!isTauri()) return null;
+  try {
+    const { listen } = await import("@tauri-apps/api/event");
+    return await listen<{ path: string; timestamp: number }>("leaf:file-modified", (event) => {
+      onModified(event.payload);
+    });
+  } catch (error) {
+    console.error("Failed to listen for native file modifications:", error);
+    return null;
   }
 }
 

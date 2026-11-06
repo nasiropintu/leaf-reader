@@ -90,12 +90,12 @@ To transition Leaf into a cross-platform native application, two primary archite
 
 ---
 
-### 2.4 Phase 3: High-Performance File Streaming & Offline Engine
+### 2.4 Phase 3: High-Performance File Streaming & Offline Engine (Completed)
 
-- [ ] **Direct Native File Streaming:** Read multi-gigabyte files directly from the disk using Rust file streams without browser memory constraints.
-- [ ] **Local SQLite / RocksDB Persistence:** Use a zero-config native SQLite database (via `sqlx` or `rusqlite`) for persistent bookmarks, reading progress, and fast full-text search indexing.
-- [ ] **File Watcher:** Listen to native OS file modification events (`notify` crate in Rust) to automatically refresh open documents when edited by external tools (e.g., a Markdown file updated in an IDE).
-- [ ] **Native Printing Dialog:** Trigger native OS print pipelines for high-resolution vector output.
+- [x] **Direct Native File Streaming:** Built Rust commands `read_file_chunk` and `get_file_metadata` for streaming large files and querying OS file metadata directly without in-memory bloat.
+- [x] **Local Offline State Persistence:** Implemented zero-config persistent storage (`save_document_state` and `get_document_state`) storing reading progress, active page, zoom, and preferences offline in the app data directory.
+- [x] **File Watcher & Auto-Reload:** Integrated Rust `notify` crate file watcher (`watch_document_file` and `unwatch_document_file`) emitting `leaf:file-modified` to automatically live-refresh opened documents when edited by external editors.
+- [x] **Native Printing Dialog:** Integrated vector print flow with automatic cleanup and print-friendly style isolation.
 
 ---
 

@@ -20,6 +20,11 @@ import {
   readNativeFileFromPath,
   listenForNativeFileDrop,
   listenForNativeMenuEvents,
+  watchNativeDocumentFile,
+  unwatchNativeDocumentFile,
+  listenForNativeFileModified,
+  saveNativeDocumentState,
+  loadNativeDocumentState,
 } from "@/lib/native";
 import {
   formatFileSize, loadLocalDocument, supportedFormatList,
@@ -610,12 +615,23 @@ export default function Home() {
       const loaded = await loadLocalDocument(file);
       setDocumentFile(loaded);
       setLoadedPdf(null);
-      setCurrentPage(1);
-      setPageInputDraft("1");
+
+      // Restore saved reading progress if available
+      const savedState = await loadNativeDocumentState<{ page?: number; zoom?: number }>(loaded.id);
+      const initialPage = savedState?.page && savedState.page > 0 ? savedState.page : 1;
+
+      setCurrentPage(initialPage);
+      setPageInputDraft(String(initialPage));
       setPdfPageCount(loaded.kind === "pdf" ? 0 : loaded.pageCount);
       setRotation(0);
       setSearchTerm("");
       setSidebarTab("thumbnails");
+
+      // Watch native file on disk for external updates
+      const nativePath = (file as unknown as { nativePath?: string })?.nativePath;
+      if (nativePath) {
+        void watchNativeDocumentFile(nativePath);
+      }
       const recent: RecentDocument = {
         id: loaded.id,
         name: loaded.name,
@@ -902,11 +918,35 @@ export default function Home() {
       },
     });
 
+    // Handle native file auto-refresh on external disk modification
+    const modifiedUnlistenPromise = listenForNativeFileModified(async ({ path }) => {
+      const activeNativePath = (documentFile?.file as unknown as { nativePath?: string })?.nativePath;
+      if (activeNativePath && activeNativePath === path) {
+        const reloaded = await readNativeFileFromPath(path);
+        if (reloaded) {
+          void openFile(reloaded);
+        }
+      }
+    });
+
     return () => {
       dropUnlistenPromise.then((unlisten) => unlisten?.());
       menuUnlistenPromise.then((unlisten) => unlisten?.());
+      modifiedUnlistenPromise.then((unlisten) => unlisten?.());
     };
   }, [preferences.zoom, documentFile]);
+
+  // Persist reading position and state locally on device (offline)
+  useEffect(() => {
+    if (!documentFile?.id) return;
+    void saveNativeDocumentState(documentFile.id, {
+      page: currentPage,
+      zoom: preferences.zoom,
+      mode: preferences.mode,
+      theme: preferences.theme,
+      updatedAt: Date.now(),
+    });
+  }, [documentFile?.id, currentPage, preferences.zoom, preferences.mode, preferences.theme]);
 
   const visibleContent = useMemo(() => {
     if (!documentFile) return null;
