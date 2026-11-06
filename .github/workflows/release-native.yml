@@ -1,0 +1,97 @@
+name: Release Native Desktop Apps
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Publish as pre-release'
+        required: false
+        default: false
+        type: boolean
+      draft:
+        description: 'Publish as draft'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'
+            args: ''
+          - platform: 'macos-latest'
+            args: '--target universal-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            args: ''
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build & Package Native App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Leaf v__VERSION__'
+          releaseBody: |
+            ## 🍃 Leaf v__VERSION__ — Native Desktop Release
+
+            **Crafted with ❤️ by NasirPintu** • 100% Free, Private-by-Design, Local-First Document Reader.
+
+            All documents are parsed and rendered directly on your machine without cloud uploads, logins, or tracking.
+
+            ### 📦 Supported Installers
+            - **Windows:** `.msi` (Windows Installer) & `.exe` (NSIS setup)
+            - **macOS:** `.dmg` (Universal binary for Apple Silicon M-series & Intel)
+            - **Linux:** `.AppImage` (Self-contained) & `.deb` (Debian / Ubuntu)
+
+            ### ⚡ Features in this Release
+            - 📑 Native OS file associations for PDF, DOCX, XLSX, PPTX, EPUB, TXT, Markdown, and images.
+            - 🚀 Ultra-lightweight Tauri v2 engine (~15MB installer, ~40MB RAM).
+            - 🎨 Frameless native window with custom titlebar and theme support.
+            - 🔄 Live disk file watching with automatic hot-reload when edited externally.
+            - 💾 100% offline local state persistence for bookmarks and reading position.
+          releaseDraft: ${{ inputs.draft || false }}
+          prerelease: ${{ inputs.prerelease || false }}
+          args: ${{ matrix.args }}

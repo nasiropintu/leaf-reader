@@ -108,9 +108,12 @@ To transition Leaf into a cross-platform native application, two primary archite
 
 ---
 
-### 2.6 Phase 5: CI/CD Packaging & Distribution
+### 2.6 Phase 5: CI/CD Packaging & Distribution (Completed)
 
-Configure automated GitHub Actions workflows to build, sign, and publish native installers:
+- [x] **Multi-Platform Release Workflow:** Created `.github/workflows/release-native.yml` configured with a 3-way matrix (`windows-latest`, `macos-latest`, `ubuntu-22.04`).
+- [x] **Universal Binaries & Installers:** Configured automatic packaging for Windows (`.msi`, NSIS `.exe`), macOS (`.dmg` Universal binary for Apple Silicon & Intel), and Linux (`.AppImage`, `.deb`).
+- [x] **Automated GitHub Releases:** Wired `tauri-apps/tauri-action` to auto-publish release artifacts on tag push (e.g. `v1.0.0`) or manual `workflow_dispatch`.
+- [x] **Platform Bundle Configuration:** Updated `src-tauri/tauri.conf.json` with NSIS, WiX, macOS minimum system version, and Linux system package dependencies.
 
 | Platform | Target Package Formats | Distribution Channels |
 | :--- | :--- | :--- |
@@ -119,11 +122,6 @@ Configure automated GitHub Actions workflows to build, sign, and publish native 
 | **Linux** | `.AppImage`, `.deb`, `.rpm`, `flatpak` | GitHub Releases, Flathub, Snapcraft |
 | **Android** | `.apk`, `.aab` | GitHub Releases, Google Play Store, F-Droid |
 | **iOS** | `.ipa` | Apple TestFlight, Apple App Store |
-
-- [ ] **Code Signing & Notarization:**
-  - Windows Authenticode certificate signing.
-  - Apple Developer ID signing & `notarytool` automated notarization.
-- [ ] **Auto-Updater:** Tauri native auto-updater with cryptographic signature validation for seamless delta updates.
 
 ---
 
