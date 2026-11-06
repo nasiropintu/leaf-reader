@@ -13,5 +13,35 @@
     { "src": "./icons/leaf-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "./icons/leaf-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "./icons/leaf.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "./",
+      "name": "Document",
+      "accept": {
+        "application/pdf": [".pdf"],
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+        "application/vnd.ms-excel": [".xls"],
+        "text/csv": [".csv"],
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
+        "application/epub+zip": [".epub"],
+        "text/plain": [".txt"],
+        "text/markdown": [".md", ".markdown"],
+        "image/png": [".png"],
+        "image/jpeg": [".jpg", ".jpeg"],
+        "image/webp": [".webp"],
+        "image/gif": [".gif"]
+      }
+    }
   ]
 }

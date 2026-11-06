@@ -28,8 +28,27 @@ button:focus-visible, input:focus-visible, [role="button"]:focus-visible { outli
 button:disabled { cursor: not-allowed; }
 ::selection { background: #c1d9e8; color: #203b50; }
 
-.app-shell { min-height: 100vh; color: var(--ink); background: #e8f1f5; }
-.app-header { height: 78px; position: sticky; z-index: 20; top: 0; display: flex; align-items: center; gap: 24px; padding: 0 clamp(18px, 4vw, 54px); border-bottom: 1px solid #d9e5eb; background: rgba(247, 250, 251, .94); backdrop-filter: blur(16px); }
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--ink);
+  background: #e8f1f5;
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.app-header {
+  height: calc(78px + env(safe-area-inset-top, 0px));
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: env(safe-area-inset-top, 0px) clamp(18px, 4vw, 54px) 0;
+  border-bottom: 1px solid #d9e5eb;
+  background: rgba(247, 250, 251, .94);
+  backdrop-filter: blur(16px);
+}
 .brand-cluster { display: flex; align-items: center; gap: 12px; min-width: 225px; }
 .brand-mark { display: block; width: 39px; height: 39px; border-radius: 12px; box-shadow: 0 3px 10px rgba(49, 91, 120, .12); }
 .brand-copy { display: flex; flex-direction: column; gap: 1px; }
@@ -236,7 +255,7 @@ button:disabled { cursor: not-allowed; }
   .library-sidebar { position: fixed; z-index: 31; top: 65px; bottom: 0; left: 0; display: flex; width: min(300px, 84vw); min-height: unset; padding: 25px 16px 18px; border-right: 1px solid #d6e2e8; box-shadow: 12px 0 32px rgba(39,70,88,.08); transform: translateX(-105%); transition: transform .22s ease; }
   .library-sidebar--open { transform: translateX(0); }
   .sidebar-backdrop { position: fixed; z-index: 30; inset: 65px 0 0; display: block; border: 0; background: rgba(28,49,63,.25); }
-  .workspace { padding: 20px 15px 24px; }
+  .workspace { padding: 20px 15px max(24px, env(safe-area-inset-bottom, 0px)); }
   .welcome-panel { grid-template-columns: 1fr; gap: 14px; margin-top: 0; }
   .welcome-copy { padding: 18px 0 0; }
   .welcome-copy h1 { max-width: 500px; margin-top: 10px; font-size: clamp(38px, 10vw, 53px); letter-spacing: -2.8px; }

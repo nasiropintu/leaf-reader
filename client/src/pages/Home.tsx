@@ -26,6 +26,7 @@ import {
   saveNativeDocumentState,
   loadNativeDocumentState,
 } from "@/lib/native";
+import { useTouchGestures } from "@/hooks/useTouchGestures";
 import {
   formatFileSize, loadLocalDocument, supportedFormatList,
   type BookChapter, type LoadedDocument, type SpreadsheetSheet,
@@ -499,6 +500,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pageInputRef = useRef<HTMLInputElement>(null);
+  const workspaceRef = useRef<HTMLElement>(null);
 
   const pageCount = documentFile?.kind === "pdf" ? pdfPageCount : documentFile?.pageCount ?? 0;
   const isMultipage = Boolean(documentFile && pageCount > 1 && ["pdf", "spreadsheet", "slides", "epub"].includes(documentFile.kind));
@@ -948,6 +950,45 @@ export default function Home() {
     });
   }, [documentFile?.id, currentPage, preferences.zoom, preferences.mode, preferences.theme]);
 
+  // Mobile touch gestures: horizontal swipe to turn pages, double tap to toggle fit, pinch to zoom
+  useTouchGestures(workspaceRef, {
+    enabled: Boolean(documentFile),
+    onSwipeLeft: () => {
+      if (preferences.mode === "page" && currentPage < pageCount) {
+        handlePageChange(currentPage + 1);
+      }
+    },
+    onSwipeRight: () => {
+      if (preferences.mode === "page" && currentPage > 1) {
+        handlePageChange(currentPage - 1);
+      }
+    },
+    onDoubleTap: () => {
+      changePreference("fitMode", preferences.fitMode === "width" ? "page" : "width");
+    },
+    onPinchZoom: (scaleDelta) => {
+      changePreference("fitMode", "manual");
+      changePreference("zoom", Math.min(3, Math.max(0.4, Number((preferences.zoom + scaleDelta).toFixed(2)))));
+    },
+  });
+
+  // Web File Handling API (PWA / Android WebAPK file open intent)
+  useEffect(() => {
+    const queue = (window as unknown as { launchQueue?: { setConsumer: (cb: (p: { files: Array<{ getFile: () => Promise<File> }> }) => void) => void } }).launchQueue;
+    if (queue) {
+      queue.setConsumer(async (launchParams) => {
+        if (launchParams.files && launchParams.files.length > 0) {
+          try {
+            const file = await launchParams.files[0].getFile();
+            void openFile(file);
+          } catch (err) {
+            console.error("Failed to open file via launchQueue:", err);
+          }
+        }
+      });
+    }
+  }, []);
+
   const visibleContent = useMemo(() => {
     if (!documentFile) return null;
     const viewMode = printAll ? "continuous" : preferences.mode;
@@ -1323,7 +1364,7 @@ export default function Home() {
           </div>
         </aside>
 
-        <main className="workspace" aria-label="Document reader">
+        <main ref={workspaceRef} className="workspace" aria-label="Document reader">
           {!documentFile ? (
             <section className="welcome-panel">
               <div className="welcome-copy">

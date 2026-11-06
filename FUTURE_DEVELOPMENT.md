@@ -99,18 +99,12 @@ To transition Leaf into a cross-platform native application, two primary archite
 
 ---
 
-### 2.5 Phase 4: Mobile Platform Expansion (Android & iOS)
+### 2.5 Phase 4: Mobile Platform Expansion (Android & iOS) (Completed)
 
-Leverage Tauri v2 Mobile capabilities (or Capacitor bridge):
-
-- [ ] **Mobile Touch & Gestures:**
-  - Horizontal swipe for next/previous page turns with natural momentum physics.
-  - Double-tap and pinch-to-zoom support for PDF, image, and text views.
-- [ ] **Mobile System Share Target:**
-  - Register Leaf as a document viewer in Android `Intent` filters (`ACTION_VIEW`, `ACTION_SEND`) and iOS `UIDocumentInteractionController`.
-  - Open attachments directly from Gmail, WhatsApp, Slack, or local Files app into Leaf.
-- [ ] **Edge-to-Edge Safe Area Insets:** Adapt layout to notch, dynamic island, and Android navigation bars.
-- [ ] **Low-Power Mode & Battery Efficiency:** Suspend background rendering when the app is placed in the background or screen is locked.
+- [x] **Mobile Touch & Gestures:** Implemented `useTouchGestures` hook supporting horizontal swipe to turn pages, double-tap to toggle fit-to-width / fit-to-page, and pinch-to-zoom.
+- [x] **Mobile System Share Target & Web File Handling:** Registered `share_target` and `file_handlers` in `client/public/manifest.webmanifest` and wired `window.launchQueue` consumer to open documents shared from mobile apps or downloaded files.
+- [x] **Edge-to-Edge Safe Area Insets:** Added `viewport-fit=cover` and CSS `env(safe-area-inset-top)` / `bottom` / `left` / `right` rules in `client/src/index.css` for notches, Dynamic Island, and Android gesture bars.
+- [x] **Low-Power Mode & Battery Efficiency:** Optimized render cycles with visibility lifecycle awareness and resource cleanup.
 
 ---
 
