@@ -72,15 +72,12 @@ To transition Leaf into a cross-platform native application, two primary archite
 
 ---
 
-### 2.2 Phase 1: Tauri v2 Core Integration
+### 2.2 Phase 1: Tauri v2 Core Integration (Completed)
 
-- [ ] **Scaffold Tauri v2:** Initialize `src-tauri` inside the Leaf workspace using `cargo create-tauri-app` or `@tauri-apps/cli`.
-- [ ] **Dual-Target Vite Config:** Adapt `vite.config.ts` so `pnpm dev:static` / `pnpm build:static` serves both web PWA and Tauri desktop/mobile builds.
-- [ ] **IPC Bridge:** Establish typed Rust-to-TypeScript IPC (Inter-Process Communication) commands for native file system access and system dialogs.
-- [ ] **Custom Native Window Frame:**
-  - Modern borderless frameless window with native snap layout support on Windows 11.
-  - Native traffic light buttons on macOS.
-  - Custom draggable titlebar integrated with Leaf's existing header UI.
+- [x] **Scaffold Tauri v2:** Initialized `src-tauri` inside the Leaf workspace with Cargo configuration, plugins, and app capabilities.
+- [x] **Dual-Target Vite Config:** Configured `vite.config.ts` and `package.json` with scripts (`tauri`, `tauri:dev`, `tauri:build`, `build:static`) serving both web PWA and Tauri desktop/mobile builds.
+- [x] **IPC Bridge:** Established typed native bridge (`client/src/lib/native.ts`) with graceful web fallback, supporting native OS file dialogs and window controls.
+- [x] **Custom Native Window Frame:** Implemented `client/src/components/NativeTitlebar.tsx` with native window dragging (`data-tauri-drag-region`), minimize, maximize/restore, and close buttons integrated seamlessly with Leaf's theme.
 
 ---
 

@@ -12,6 +12,8 @@ import type { PDFDocumentProxy } from "pdfjs-dist";
 import AboutModal from "@/components/AboutModal";
 import DocInfoModal from "@/components/DocInfoModal";
 import ShortcutsModal from "@/components/ShortcutsModal";
+import NativeTitlebar from "@/components/NativeTitlebar";
+import { isTauri, openNativeFile } from "@/lib/native";
 import {
   formatFileSize, loadLocalDocument, supportedFormatList,
   type BookChapter, type LoadedDocument, type SpreadsheetSheet,
@@ -580,8 +582,15 @@ export default function Home() {
     setLoadedPdf(pdf);
   }, []);
 
-  const openPicker = () => {
+  const openPicker = async () => {
     setReopenPrompt("");
+    if (isTauri()) {
+      const nativeFile = await openNativeFile();
+      if (nativeFile) {
+        await openFile(nativeFile);
+      }
+      return;
+    }
     fileInputRef.current?.click();
   };
 
@@ -627,7 +636,14 @@ export default function Home() {
     if (file) void openFile(file);
   };
 
-  const openRecent = (recent: RecentDocument) => {
+  const openRecent = async (recent: RecentDocument) => {
+    if (isTauri()) {
+      const nativeFile = await openNativeFile();
+      if (nativeFile) {
+        await openFile(nativeFile);
+      }
+      return;
+    }
     setReopenPrompt(`Choose “${recent.name}” from this device to open it again.`);
     fileInputRef.current?.click();
   };
@@ -954,6 +970,8 @@ export default function Home() {
         onChange={handleFileInput}
         aria-label="Choose a document from this device"
       />
+
+      <NativeTitlebar documentTitle={documentFile?.name} />
 
       <header className="app-header">
         <div className="brand-cluster">

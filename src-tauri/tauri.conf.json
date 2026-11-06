@@ -1,0 +1,47 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Leaf",
+  "version": "1.0.0",
+  "identifier": "com.nasirpintu.leaf",
+  "build": {
+    "frontendDist": "../dist/public",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "npm run dev:static",
+    "beforeBuildCommand": "npm run build:static"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Leaf — Document Reader",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 640,
+        "minHeight": 480,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Utility",
+    "shortDescription": "100% free, private-by-design, local-first document reader",
+    "longDescription": "Leaf is an open-source, local-first document reader crafted by NasirPintu. All documents are parsed and rendered directly on your device without cloud uploads or accounts.",
+    "copyright": "Copyright © 2026 NasirPintu",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "android": {
+      "debugApplicationIdSuffix": ".debug"
+    }
+  }
+}
