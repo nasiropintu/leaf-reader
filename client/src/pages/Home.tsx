@@ -1118,8 +1118,6 @@ export default function Home() {
         aria-label="Choose a document from this device"
       />
 
-      <NativeTitlebar documentTitle={documentFile?.name} />
-
       <header className="app-header">
         <div className="brand-cluster">
           <button

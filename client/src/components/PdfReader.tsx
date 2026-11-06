@@ -334,14 +334,14 @@ export default function PdfReader({
 
   useEffect(() => {
     if (!pdf || mode !== "continuous") return;
-    const element = viewerRef.current;
-    if (!element) return;
+    const scrollContainer = viewerRef.current?.closest(".reader-stage") || viewerRef.current;
+    if (!scrollContainer) return;
     let frame = 0;
     const updatePage = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const center = element.getBoundingClientRect().top + element.clientHeight / 2;
-        const candidates = Array.from(element.querySelectorAll<HTMLElement>(".pdf-page"));
+        const center = scrollContainer.getBoundingClientRect().top + scrollContainer.clientHeight / 2;
+        const candidates = Array.from(scrollContainer.querySelectorAll<HTMLElement>(".pdf-page"));
         let closest = page;
         let distance = Number.POSITIVE_INFINITY;
         for (const candidate of candidates) {
@@ -355,11 +355,37 @@ export default function PdfReader({
         if (closest !== page) onPageChange(closest);
       });
     };
-    element.addEventListener("scroll", updatePage, { passive: true });
+    scrollContainer.addEventListener("scroll", updatePage, { passive: true });
     return () => {
-      element.removeEventListener("scroll", updatePage);
+      scrollContainer.removeEventListener("scroll", updatePage);
       cancelAnimationFrame(frame);
     };
+  }, [pdf, mode, page, onPageChange]);
+
+  // Page-by-page mouse wheel scrolling
+  useEffect(() => {
+    if (!pdf || mode !== "page") return;
+    const scrollContainer = viewerRef.current?.closest(".reader-stage") || viewerRef.current;
+    if (!scrollContainer) return;
+
+    let lastWheelTime = 0;
+    const handleWheel = (event: Event) => {
+      const e = event as WheelEvent;
+      if (e.ctrlKey || e.metaKey || Math.abs(e.deltaY) < 25) return;
+      const now = Date.now();
+      if (now - lastWheelTime < 280) return;
+
+      if (e.deltaY > 0 && page < pdf.numPages) {
+        lastWheelTime = now;
+        onPageChange(page + 1);
+      } else if (e.deltaY < 0 && page > 1) {
+        lastWheelTime = now;
+        onPageChange(page - 1);
+      }
+    };
+
+    scrollContainer.addEventListener("wheel", handleWheel as EventListener, { passive: true });
+    return () => scrollContainer.removeEventListener("wheel", handleWheel as EventListener);
   }, [pdf, mode, page, onPageChange]);
 
   if (loading) return <div className="reader-message" role="status">Preparing your PDF…</div>;

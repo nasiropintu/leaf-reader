@@ -98,6 +98,9 @@ jobs:
           args: ${{ matrix.args }}
 
   build-android:
+    needs: [build-and-release]
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

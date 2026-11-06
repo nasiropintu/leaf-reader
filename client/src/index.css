@@ -165,10 +165,10 @@ button:disabled { cursor: not-allowed; }
 .search-nav .icon-button { width: 27px; height: 27px; }
 .load-error--inline { display: flex; align-items: center; justify-content: space-between; border-radius: 0; }
 .load-error--inline button { display: grid; width: 24px; height: 24px; place-items: center; border: 0; color: #98554b; background: transparent; }
-.reader-stage { min-height: min(610px, calc(100vh - 268px)); max-height: calc(100vh - 254px); overflow: auto; border: 1px solid #d9e4e9; border-radius: 0 0 12px 12px; background: var(--canvas); overscroll-behavior: contain; }
+.reader-stage { min-height: min(610px, calc(100vh - 268px)); max-height: calc(100vh - 254px); overflow-y: auto; overflow-x: auto; border: 1px solid #d9e4e9; border-radius: 0 0 12px 12px; background: var(--canvas); }
 .reader-stage--pdf { padding: 18px 10px; }
 .reader-stage--night { background: #1c252d; border-color: #313d46; }
-.pdf-viewer { min-height: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; overflow: auto; }
+.pdf-viewer { min-height: 100%; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; overflow: visible; }
 .pdf-viewer--page { justify-content: center; }
 .pdf-viewer--continuous { justify-content: flex-start; }
 .pdf-page { display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; width: max-content; max-width: 100%; padding: 10px 10px 7px; border: 1px solid #e7ecef; border-radius: 3px; background: white; box-shadow: 0 5px 17px rgba(34,55,68,.11); }
