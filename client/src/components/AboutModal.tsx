@@ -68,7 +68,7 @@ export default function AboutModal({ isOpen, onClose, openSourceCredits = [] }: 
           <div className="creator-meta">
             <div className="creator-tagline-pill">
               <Heart size={11} style={{ fill: 'currentColor', color: '#e54b24' }} />
-              <span>Crafted with Love</span>
+              <span>Crafted with Love · v1.1.0</span>
             </div>
             <h2 className="creator-name">NasirPintu</h2>
             <p className="creator-subtitle">Mohammad Nasiruddin Pintu · Creator & Architect</p>

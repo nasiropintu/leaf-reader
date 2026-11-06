@@ -72,33 +72,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
-          releaseName: 'Leaf v__VERSION__'
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.1.0' }}
+          releaseName: 'Leaf v1.1.0'
           releaseBody: |
-            ## 🍃 Leaf v__VERSION__ — Native Desktop & Mobile Release
+            ## 🍃 Leaf v1.1.0 — Native Desktop & Mobile Release
 
             **Crafted with ❤️ by NasirPintu** • 100% Free, Private-by-Design, Local-First Document Reader.
 
             All documents are parsed and rendered directly on your machine without cloud uploads, logins, or tracking.
 
-            ### 📦 Supported Installers
+            ### 📦 Supported Installers & Apps
+            - **Android:** `.apk` (`leaf-reader-android-arm64.apk` for phones & tablets)
             - **Windows:** `.msi` (Windows Installer) & `.exe` (NSIS setup)
             - **macOS:** `.dmg` (Universal binary for Apple Silicon M-series & Intel)
             - **Linux:** `.AppImage` (Universal standalone) & `.deb` (Debian / Ubuntu)
-            - **Android:** `.apk` (Direct install for Android phones & tablets)
 
-            ### ⚡ Features in this Release
-            - 📑 Native OS file associations for PDF, DOCX, XLSX, PPTX, EPUB, TXT, Markdown, and images.
-            - 🚀 Ultra-lightweight Tauri v2 engine (~15MB installer, ~40MB RAM).
-            - 🎨 Frameless native window with custom titlebar and theme support.
-            - 🔄 Live disk file watching with automatic hot-reload when edited externally.
-            - 💾 100% offline local state persistence for bookmarks and reading position.
+            ### ⚡ What's New in v1.1.0
+            - 📱 **Android Native App:** Full standalone APK package with authentic NasirPintu Leaf launcher icons.
+            - 🖥️ **Windows Native Window Management:** True native OS titlebar with smooth dragging, native minimize, maximize, and Windows 11 Snap Layouts.
+            - 📄 **Multi-Page PDF Scrolling:** Seamless mouse wheel scrolling and page navigation with nested container resolution.
+            - 📑 **OS File Associations:** Direct launch for PDF, DOCX, XLSX, PPTX, EPUB, TXT, Markdown, and images.
+            - 🔄 **Live File Watcher:** Auto hot-reloads documents when edited externally.
+            - 💾 **100% Offline Persistence:** Stores reading positions and zoom preferences locally.
           releaseDraft: ${{ inputs.draft || false }}
           prerelease: ${{ inputs.prerelease || false }}
           args: ${{ matrix.args }}
 
   build-android:
-    needs: [build-and-release]
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -164,10 +164,10 @@ jobs:
           path: build-artifacts/leaf-reader-android-arm64.apk
 
       - name: Attach APK to GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
-        with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
-          files: build-artifacts/leaf-reader-android-arm64.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_type == 'tag' && github.ref_name || 'v1.1.0' }}"
+          echo "Uploading APK to release $TAG..."
+          gh release upload "$TAG" build-artifacts/leaf-reader-android-arm64.apk --clobber || \
+          gh release create "$TAG" build-artifacts/leaf-reader-android-arm64.apk --title "Leaf $TAG" --notes "Leaf $TAG Native Release"

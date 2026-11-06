@@ -1,6 +1,6 @@
 [package]
 name = "leaf"
-version = "1.0.0"
+version = "1.1.0"
 description = "Leaf — 100% free, private-by-design, local-first document reader crafted by NasirPintu"
 authors = ["NasirPintu <https://github.com/nasiropintu>"]
 license = "MIT"

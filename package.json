@@ -1,6 +1,6 @@
 {
   "name": "leaf-reader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Leaf — 100% free, private-by-design, local-first document reader PWA crafted by NasirPintu",
   "type": "module",
   "license": "MIT",
