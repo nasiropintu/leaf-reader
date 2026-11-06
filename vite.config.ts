@@ -24,10 +24,10 @@ function vitePluginPublicPlatformConfig(): Plugin {
   };
 }
 
-// Generate 404.html for SPA fallback on GitHub Pages
-function vitePluginSpaFallback(): Plugin {
+// Generate 404.html for SPA fallback on GitHub Pages & inject build assets into service-worker.js
+function vitePluginPwaAndSpa(): Plugin {
   return {
-    name: "spa-fallback-404",
+    name: "pwa-and-spa-builder",
     closeBundle() {
       const distDir = path.resolve(import.meta.dirname, "dist/public");
       const indexPath = path.join(distDir, "index.html");
@@ -35,13 +35,29 @@ function vitePluginSpaFallback(): Plugin {
       if (fs.existsSync(indexPath)) {
         fs.copyFileSync(indexPath, notFoundPath);
       }
+
+      // Collect compiled assets from dist/public/assets and inject into service-worker.js
+      const assetsDir = path.join(distDir, "assets");
+      const swPath = path.join(distDir, "service-worker.js");
+      if (fs.existsSync(assetsDir) && fs.existsSync(swPath)) {
+        const assetFiles = fs.readdirSync(assetsDir);
+        const assetUrls = assetFiles.map((file) => `  "./assets/${file}"`).join(",\n");
+        let swContent = fs.readFileSync(swPath, "utf-8");
+        if (swContent.includes("/* __BUILD_ASSETS__ */")) {
+          swContent = swContent.replace(
+            "/* __BUILD_ASSETS__ */",
+            `,\n${assetUrls}`
+          );
+          fs.writeFileSync(swPath, swContent, "utf-8");
+        }
+      }
     },
   };
 }
 
 const plugins = [
   vitePluginPublicPlatformConfig(),
-  vitePluginSpaFallback(),
+  vitePluginPwaAndSpa(),
   react(),
   tailwindcss(),
   jsxLocPlugin(),
