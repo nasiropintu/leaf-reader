@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Leaf reader icon">
+  <rect width="192" height="192" rx="48" fill="#315b78"/>
+  <path d="M139 48c-45 1-77 12-88 40-8 20 5 43 27 46 31 5 56-29 61-86Z" fill="#e8f1f5"/>
+  <path d="M57 133c17-20 34-38 62-57" fill="none" stroke="#315b78" stroke-linecap="round" stroke-width="8"/>
+  <path d="M78 111c-1-11-8-18-18-22M101 91c-1-11 3-20 11-28" fill="none" stroke="#315b78" stroke-linecap="round" stroke-width="6"/>
+</svg>
