@@ -435,8 +435,52 @@ export default function Home() {
   const [sidebarTab, setSidebarTab] = useState<"thumbnails" | "library">("thumbnails");
   const [isZenMode, setIsZenMode] = useState(false);
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
+  const [toolbarVisible, setToolbarVisible] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const hideToolbarTimerRef = useRef<number | null>(null);
   const [printAll, setPrintAll] = useState(false);
   const [navigationRequest, setNavigationRequest] = useState(0);
+
+  const isDistractionFree = isNativeFullscreen || isZenMode;
+
+  const resetHideTimer = useCallback(() => {
+    setToolbarVisible(true);
+    if (hideToolbarTimerRef.current) {
+      window.clearTimeout(hideToolbarTimerRef.current);
+      hideToolbarTimerRef.current = null;
+    }
+    if (isDistractionFree && !themeMenuOpen && !infoOpen && !shortcutsOpen) {
+      hideToolbarTimerRef.current = window.setTimeout(() => {
+        setToolbarVisible(false);
+      }, 2400);
+    }
+  }, [isDistractionFree, themeMenuOpen, infoOpen, shortcutsOpen]);
+
+  useEffect(() => {
+    if (isDistractionFree) {
+      resetHideTimer();
+      const onMouseMove = (e: MouseEvent) => {
+        if (e.clientY <= 90) {
+          setToolbarVisible(true);
+          if (hideToolbarTimerRef.current) {
+            window.clearTimeout(hideToolbarTimerRef.current);
+            hideToolbarTimerRef.current = null;
+          }
+        } else {
+          resetHideTimer();
+        }
+      };
+      window.addEventListener("mousemove", onMouseMove);
+      return () => {
+        window.removeEventListener("mousemove", onMouseMove);
+        if (hideToolbarTimerRef.current) {
+          window.clearTimeout(hideToolbarTimerRef.current);
+        }
+      };
+    } else {
+      setToolbarVisible(true);
+    }
+  }, [isDistractionFree, resetHideTimer]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -506,7 +550,9 @@ export default function Home() {
 
   useEffect(() => {
     const onFullscreenChange = () => {
-      setIsNativeFullscreen(Boolean(document.fullscreenElement));
+      const isFs = Boolean(document.fullscreenElement);
+      setIsNativeFullscreen(isFs);
+      if (isFs) setSidebarOpen(false);
     };
     document.addEventListener("fullscreenchange", onFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
@@ -619,6 +665,7 @@ export default function Home() {
   const toggleNativeFullscreen = async () => {
     try {
       if (!document.fullscreenElement) {
+        setSidebarOpen(false);
         await document.documentElement.requestFullscreen();
       } else {
         await document.exitFullscreen();
@@ -629,7 +676,11 @@ export default function Home() {
   };
 
   const toggleZenMode = () => {
-    setIsZenMode((v) => !v);
+    setIsZenMode((v) => {
+      const next = !v;
+      if (next) setSidebarOpen(false);
+      return next;
+    });
   };
 
   const downloadDocument = () => {
@@ -681,11 +732,19 @@ export default function Home() {
       const typing = target?.matches("input, textarea, select, [contenteditable='true']");
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") {
         event.preventDefault();
-        searchInputRef.current?.focus();
-        searchInputRef.current?.select();
+        setSearchOpen(true);
+        setToolbarVisible(true);
+        window.setTimeout(() => {
+          searchInputRef.current?.focus();
+          searchInputRef.current?.select();
+        }, 60);
         return;
       }
       if (event.key === "Escape") {
+        if (searchOpen) {
+          setSearchOpen(false);
+          return;
+        }
         if (aboutOpen || infoOpen || shortcutsOpen || themeMenuOpen) {
           setThemeMenuOpen(false);
           return;
@@ -1230,8 +1289,31 @@ export default function Home() {
                 </div>
               </div>
 
+              {isDistractionFree && (
+                <div
+                  className="fullscreen-wake-zone"
+                  onMouseEnter={() => {
+                    setToolbarVisible(true);
+                    resetHideTimer();
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+
               {/* Top-Notch Comprehensive Document Viewer Toolbar */}
-              <div className="reader-toolbar" role="toolbar" aria-label="Document reading controls">
+              <div
+                className={`reader-toolbar ${isDistractionFree && !toolbarVisible ? "toolbar--hidden" : ""}`}
+                role="toolbar"
+                aria-label="Document reading controls"
+                onMouseEnter={() => {
+                  setToolbarVisible(true);
+                  if (hideToolbarTimerRef.current) {
+                    window.clearTimeout(hideToolbarTimerRef.current);
+                    hideToolbarTimerRef.current = null;
+                  }
+                }}
+                onMouseLeave={() => resetHideTimer()}
+              >
                 {/* Left: Sidebar toggle */}
                 <button
                   className={`icon-button ${sidebarOpen ? "is-active" : ""}`}
@@ -1527,8 +1609,23 @@ export default function Home() {
 
                 <span className="toolbar-divider" />
 
-                {/* Document Utilities: Info, Download, Shortcuts */}
+                {/* Document Utilities: Search, Info, Download, Shortcuts */}
                 <div className="toolbar-group utils-group">
+                  <button
+                    className={`icon-button ${searchOpen || searchTerm ? "is-active" : ""}`}
+                    type="button"
+                    aria-label="Find in document (⌘ F)"
+                    title="Find in document (⌘ F)"
+                    onClick={() => {
+                      setSearchOpen((v) => !v);
+                      setToolbarVisible(true);
+                      if (!searchOpen) {
+                        setTimeout(() => searchInputRef.current?.focus(), 80);
+                      }
+                    }}
+                  >
+                    <Search size={16} />
+                  </button>
                   <button
                     className="icon-button"
                     type="button"
@@ -1560,48 +1657,64 @@ export default function Home() {
               </div>
 
               {/* In-Document Search Bar */}
-              <div className="search-row">
-                <div className="search-box">
-                  <Search size={16} />
-                  <input
-                    ref={searchInputRef}
-                    type="search"
-                    placeholder={
-                      documentFile.kind === "image"
-                        ? "Search isn’t available for images"
-                        : "Find in this document…"
-                    }
-                    aria-label="Search inside this document"
-                    value={searchTerm}
-                    disabled={documentFile.kind === "image"}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                  />
-                  <kbd>⌘ F</kbd>
+              {(!isDistractionFree || searchOpen || searchTerm.trim().length > 0) && (
+                <div className="search-row">
+                  <div className="search-box">
+                    <Search size={16} />
+                    <input
+                      ref={searchInputRef}
+                      type="search"
+                      placeholder={
+                        documentFile.kind === "image"
+                          ? "Search isn’t available for images"
+                          : "Find in this document…"
+                      }
+                      aria-label="Search inside this document"
+                      value={searchTerm}
+                      disabled={documentFile.kind === "image"}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                    />
+                    <kbd>⌘ F</kbd>
+                  </div>
+                  <div className="search-results" aria-live="polite">
+                    {searchTerm ? (searchCount ? <><span>{selectedHit + 1}</span> of {searchCount}</> : "No matches") : ""}
+                  </div>
+                  <div className="search-nav">
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label="Previous match"
+                      disabled={searchCount < 1}
+                      onClick={() => jumpToHit(-1)}
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label="Next match"
+                      disabled={searchCount < 1}
+                      onClick={() => jumpToHit(1)}
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                    {isDistractionFree && (
+                      <button
+                        type="button"
+                        className="icon-button"
+                        aria-label="Close search"
+                        title="Close search"
+                        onClick={() => {
+                          setSearchOpen(false);
+                          setSearchTerm("");
+                        }}
+                      >
+                        <X size={15} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="search-results" aria-live="polite">
-                  {searchTerm ? (searchCount ? <><span>{selectedHit + 1}</span> of {searchCount}</> : "No matches") : ""}
-                </div>
-                <div className="search-nav">
-                  <button
-                    type="button"
-                    className="icon-button"
-                    aria-label="Previous match"
-                    disabled={searchCount < 1}
-                    onClick={() => jumpToHit(-1)}
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className="icon-button"
-                    aria-label="Next match"
-                    disabled={searchCount < 1}
-                    onClick={() => jumpToHit(1)}
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
+              )}
 
               {loadError && (
                 <div className="load-error load-error--inline" role="alert">
