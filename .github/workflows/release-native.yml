@@ -109,17 +109,25 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android NDK
-        run: |
-          sdkmanager --install "ndk;26.1.10909125"
-
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: 'aarch64-linux-android,armv7-linux-androideabi'
+
+      - name: Configure Android SDK and NDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          if [ -d "$ANDROID_SDK_ROOT/ndk" ]; then
+            NDK_VER=$(ls -1 "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -n 1)
+            echo "Using preinstalled NDK: $NDK_VER"
+            echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_VER" >> $GITHUB_ENV
+            echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_VER" >> $GITHUB_ENV
+          else
+            echo "Installing NDK via sdkmanager..."
+            yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;26.1.10909125"
+            echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
+            echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -136,13 +144,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Android APK
-        env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
         run: |
           pnpm tauri android init --ci
           pnpm tauri android build --apk --target aarch64
 
-      - name: Find and Rename APK
+      - name: Find and Package APK
         run: |
           mkdir -p build-artifacts
           find src-tauri/gen/android/app/build/outputs/apk/ -name "*.apk" -exec cp {} build-artifacts/leaf-reader-android-arm64.apk \;
