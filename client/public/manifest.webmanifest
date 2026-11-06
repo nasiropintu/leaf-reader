@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Leaf — Document Reader",
+  "name": "Leaf — Free Document Reader",
   "short_name": "Leaf",
-  "description": "A calm, private reader for everyday documents.",
+  "description": "A 100% free, private-by-design, local-first document reader PWA crafted with love by NasirPintu.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

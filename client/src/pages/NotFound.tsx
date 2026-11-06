@@ -17,12 +17,6 @@ export default function NotFound() {
     robots.name = "robots";
     robots.content = "noindex";
     document.head.appendChild(robots);
-
-    // Full-page navigation: a client-side route change sends no request, so no 404 status.
-    if (window.location.pathname.replace(/\/$/, "") !== NOT_FOUND_PATH) {
-      window.location.replace(NOT_FOUND_PATH);
-    }
-
     return () => robots.remove();
   }, []);
 

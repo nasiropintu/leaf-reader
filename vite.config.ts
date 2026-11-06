@@ -1,6 +1,7 @@
 import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import { publicPlatformScript } from "./server/_core/publicConfig";
@@ -23,7 +24,28 @@ function vitePluginPublicPlatformConfig(): Plugin {
   };
 }
 
-const plugins = [vitePluginPublicPlatformConfig(), react(), tailwindcss(), jsxLocPlugin()];
+// Generate 404.html for SPA fallback on GitHub Pages
+function vitePluginSpaFallback(): Plugin {
+  return {
+    name: "spa-fallback-404",
+    closeBundle() {
+      const distDir = path.resolve(import.meta.dirname, "dist/public");
+      const indexPath = path.join(distDir, "index.html");
+      const notFoundPath = path.join(distDir, "404.html");
+      if (fs.existsSync(indexPath)) {
+        fs.copyFileSync(indexPath, notFoundPath);
+      }
+    },
+  };
+}
+
+const plugins = [
+  vitePluginPublicPlatformConfig(),
+  vitePluginSpaFallback(),
+  react(),
+  tailwindcss(),
+  jsxLocPlugin(),
+];
 
 export default defineConfig({
   plugins,

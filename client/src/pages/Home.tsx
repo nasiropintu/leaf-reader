@@ -1,16 +1,28 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from "react";
 import {
-  BookOpen, Check, ChevronLeft, ChevronRight, FileText, FolderOpen, Image as ImageIcon,
+  BookOpen, Check, ChevronLeft, ChevronRight, FileText, FolderOpen, Heart, Image as ImageIcon,
   Keyboard, Leaf, Menu, Minus, Moon, MoreHorizontal, Plus, Printer, RotateCw, Search,
   Sheet, Sun, X,
 } from "lucide-react";
 import type { FitMode, ReadingMode } from "@/components/PdfReader";
+import AboutModal from "@/components/AboutModal";
 import {
   formatFileSize, loadLocalDocument, supportedFormatList,
   type BookChapter, type LoadedDocument, type SpreadsheetSheet,
 } from "@/lib/documents";
 
 const PdfReader = lazy(() => import("@/components/PdfReader"));
+
+const OPEN_SOURCE_CREDITS = [
+  { name: "PDF.js", author: "Mozilla", desc: "Industry-standard client-side PDF document parser and rendering canvas." },
+  { name: "Mammoth", author: "Michael Searle", desc: "DOCX to clean semantic HTML/text document conversion library." },
+  { name: "SheetJS (xlsx)", author: "SheetJS LLC", desc: "Spreadsheet parser and table extractor for Excel XLSX, XLS, and CSV files." },
+  { name: "JSZip", author: "Stuart Knightley", desc: "Fast in-memory zip archive reader used for EPUB and PowerPoint extraction." },
+  { name: "Lucide React", author: "Lucide Project", desc: "Crisp, lightweight, and accessible modern icon system." },
+  { name: "Radix UI", author: "WorkOS", desc: "Unstyled, accessible UI component primitives for modern React applications." },
+  { name: "Wouter", author: "Alexey Taktarov", desc: "Minimalist, zero-dependency client-side router for React." },
+  { name: "Tailwind CSS", author: "Tailwind Labs", desc: "Utility-first CSS styling framework." },
+];
 
 type ReaderTheme = "paper" | "night";
 interface RecentDocument { id: string; name: string; format: string; size: number; openedAt: number; }
@@ -193,6 +205,7 @@ function RecentIcon({ format }: { format: string }) {
 }
 
 export default function Home() {
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [documentFile, setDocumentFile] = useState<LoadedDocument | null>(null);
   const [recents, setRecents] = useState<RecentDocument[]>(readStoredRecents);
   const [preferences, setPreferences] = useState<Preferences>(readStoredPreferences);
@@ -415,7 +428,13 @@ export default function Home() {
         <img className="brand-mark" src="./icons/leaf.svg" alt="" />
         <div className="brand-copy"><span className="brand-name">Leaf</span><span className="brand-subtitle">DOCUMENT READER</span></div>
       </div>
-      <div className="header-center"><span className="privacy-dot" />Your files stay on this device</div>
+      <div className="header-center">
+        <span className="privacy-dot" />Your files stay on this device
+        <button className="header-tagline-btn" type="button" onClick={() => setAboutOpen(true)} title="About NasirPintu & Credits" style={{ marginLeft: 12 }}>
+          <Heart size={12} style={{ fill: '#ff6b6b', color: '#ff6b6b' }} />
+          <span>Crafted with ❤️ by <strong>NasirPintu</strong></span>
+        </button>
+      </div>
       <div className="header-actions">
         <button className="button button--secondary header-open" type="button" onClick={openPicker}><FolderOpen size={16} /> Open a document</button>
       </div>
@@ -430,7 +449,12 @@ export default function Home() {
           <MoreHorizontal className="recent-item__more" size={17} />
         </button>)}</div> : <div className="recent-empty"><span className="recent-empty__icon"><BookOpen size={19} /></span><p>Documents you open will appear here.</p></div>}
         {reopenPrompt && <p className="reopen-prompt" role="status">{reopenPrompt}</p>}
-        <div className="sidebar-bottom"><div className="offline-card"><span className="offline-card__check"><Check size={13} /></span><div><strong>Private by design</strong><p>Files open locally. Nothing is uploaded.</p></div></div>
+        <div className="sidebar-bottom">
+          <button className="creator-sidebar-pill" type="button" onClick={() => setAboutOpen(true)} title="View Creator & AI Collaboration Credits">
+            <span className="creator-pill-heart"><Heart size={14} style={{ fill: '#ff6b6b' }} /></span>
+            <span className="creator-pill-text">Crafted with ❤️ by <strong>NasirPintu</strong></span>
+          </button>
+          <div className="offline-card"><span className="offline-card__check"><Check size={13} /></span><div><strong>Private by design</strong><p>Files open locally. Nothing is uploaded.</p></div></div>
           <button className="keyboard-hint" type="button" onClick={() => { searchInputRef.current?.focus(); }}><Keyboard size={14} /><span>⌘ / Ctrl + F to find</span></button>
         </div>
       </aside>
@@ -493,5 +517,6 @@ export default function Home() {
     </div>
     {sidebarOpen && <button className="sidebar-backdrop" type="button" aria-label="Close recent documents" onClick={() => setSidebarOpen(false)} />}
     <div className="visually-hidden" aria-live="polite">{loadingFile ? "Opening document" : ""}</div>
+    <AboutModal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} openSourceCredits={OPEN_SOURCE_CREDITS} />
   </div>;
 }

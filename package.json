@@ -1,9 +1,15 @@
 {
-  "name": "leaf",
+  "name": "leaf-reader",
   "version": "1.0.0",
-  "description": "Leaf — Installable, local-first document reader PWA",
+  "description": "Leaf — 100% free, private-by-design, local-first document reader PWA crafted by NasirPintu",
   "type": "module",
   "license": "MIT",
+  "author": "NasirPintu <https://github.com/nasiropintu>",
+  "homepage": "https://nasiropintu.github.io/leaf-reader/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nasiropintu/leaf-reader.git"
+  },
   "scripts": {
     "dev": "tsx watch server/_core/index.ts",
     "build": "vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",

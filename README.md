@@ -1,26 +1,30 @@
 # Leaf — Local-First Document Reader PWA
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-nasiropintu.github.io%2Fleaf--reader-teal.svg)](https://nasiropintu.github.io/leaf-reader/)
+[![Crafted with Love by NasirPintu](https://img.shields.io/badge/Crafted%20with%20%E2%9D%A4%EF%B8%8F%20by-NasirPintu-crimson.svg)](https://github.com/nasiropintu)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Deploy to GitHub Pages](https://github.com/actions/workflows/pages.yml/badge.svg)](.github/workflows/pages.yml)
+[![Deploy to GitHub Pages](https://github.com/nasiropintu/leaf-reader/actions/workflows/pages.yml/badge.svg)](https://github.com/nasiropintu/leaf-reader/actions/workflows/pages.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-22+-green.svg)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-10+-orange.svg)](https://pnpm.io)
 
-Leaf is a fast, installable, local-first document reader Progressive Web App (PWA). All files are opened entirely inside your browser sandbox and are **never uploaded** to any server. No account or sign-in is required.
+**Leaf** is a 100% free, private-by-design, local-first document reader Progressive Web App (PWA) conceived and architected by **NasirPintu**. All documents are parsed and rendered directly inside your browser sandbox and are **never uploaded** to any server. No accounts, paywalls, or subscriptions.
+
+🔗 **Live Application:** [https://nasiropintu.github.io/leaf-reader/](https://nasiropintu.github.io/leaf-reader/)
 
 ---
 
-## Key Highlights
+## 🌟 Key Highlights
 
 - **100% Private & Local-First**: Documents never leave your device. Raw file data is not persisted to disk or cloud.
-- **Installable PWA**: Works offline once installed via service worker app shell caching.
-- **Broad Format Support**: PDF, Word, Excel, PowerPoint, EPUB, Markdown, images, and more.
-- **Reading Comfort**: Page-by-page and continuous reading modes, night/paper themes, zoom/fit controls, and rotation.
-- **In-Document Search**: Instant text search with match counts and hit navigation.
-- **Zero Configuration Deployment**: Ready to deploy directly to GitHub Pages via included GitHub Actions workflow.
+- **Installable Offline PWA**: Works completely offline once installed via service worker app shell caching.
+- **Broad Format Support**: PDF, Word, Excel, PowerPoint, EPUB, Markdown, plain text, images, and OpenDocument.
+- **Reading Comfort**: Page-by-page and continuous reading modes, night/paper themes, zoom/fit controls, and 90° rotation.
+- **In-Document Search**: Instant full-text search with match counters and hit navigation.
+- **Zero-Configuration Deployment**: Runs as a static PWA ready for GitHub Pages or containerized via Docker.
 
 ---
 
-## Supported Formats
+## 📁 Supported Formats
 
 | Category | Formats | In-Browser Engine / Strategy |
 | :--- | :--- | :--- |
@@ -36,7 +40,7 @@ Leaf is a fast, installable, local-first document reader Progressive Web App (PW
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -63,11 +67,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser and drag-and
 pnpm build:static
 ```
 
-The compiled, static PWA will be output to `dist/public`. This directory is ready to be hosted on any static host (GitHub Pages, Netlify, Vercel, Cloudflare Pages, S3, etc.).
+The compiled, static PWA will be output to `dist/public`. This includes automated `404.html` SPA routing for seamless hosting on GitHub Pages, Netlify, Vercel, or Cloudflare Pages.
 
 ---
 
-## Deployment to GitHub Pages
+## 🌐 Deployment to GitHub Pages
 
 Leaf is pre-configured with a GitHub Actions workflow in `.github/workflows/pages.yml`.
 
@@ -75,11 +79,11 @@ To deploy:
 1. Push this repository to GitHub on branch `main`.
 2. Go to **Settings > Pages** in your GitHub repository.
 3. Under **Build and deployment > Source**, select **GitHub Actions**.
-4. Every push to `main` will automatically build and publish Leaf to your GitHub Pages URL.
+4. Every push to `main` will automatically build and publish Leaf to your GitHub Pages URL (`https://<username>.github.io/<repo>/`).
 
 ---
 
-## Docker Deployment (Optional Server Mode)
+## 🐳 Docker Deployment (Optional Server Mode)
 
 Leaf also includes a production-ready `Dockerfile` and optional Express application server:
 
@@ -95,7 +99,7 @@ Access Leaf at [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Reader Tools & Shortcuts
+## 🛠️ Reader Tools & Shortcuts
 
 - **Reading Modes**: Switch between single page and continuous scroll modes for paginated formats.
 - **Zoom & Alignment**: Zoom in/out, fit to page width, fit to viewport, and 90° rotation.
@@ -107,46 +111,59 @@ Access Leaf at [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```text
 ├── client/
-│   ├── index.html                  # HTML entry point
-│   ├── public/                     # PWA manifest, service worker, icons
+│   ├── index.html                  # HTML entry point with metadata & branding
+│   ├── public/                     # PWA manifest, service worker, icons, nasirpintu.jpg
 │   └── src/
 │       ├── components/
+│       │   ├── AboutModal.tsx      # Creator attribution & AI collaboration credits modal
 │       │   ├── PdfReader.tsx       # PDF.js canvas and continuous rendering engine
 │       │   └── ui/                 # Accessible Radix UI components
 │       ├── lib/
 │       │   └── documents.ts        # Format detection, extraction, and parsing
 │       ├── pages/
 │       │   └── Home.tsx            # Reader workspace and local preferences
-│       ├── App.tsx                 # Routing and root providers
+│       ├── App.tsx                 # Base-safe routing & root providers
 │       └── main.tsx                # Client boot & service worker registration
 ├── server/                         # Optional Node.js/Express server & API routes
 ├── drizzle/                        # Optional database schema migrations
 ├── .github/workflows/pages.yml     # Automated GitHub Pages CI/CD workflow
 ├── Dockerfile                      # Container build definition
-└── vite.config.ts                  # Vite build and PWA configuration
+└── vite.config.ts                  # Vite build, PWA & SPA fallback configuration
 ```
 
 ---
 
-## Scripts Reference
+## 👤 Creator & Vision
 
-| Command | Description |
-| :--- | :--- |
-| `pnpm dev:static` | Starts the Vite development server on port 3000 |
-| `pnpm build:static`| Builds static PWA bundle into `dist/public` |
-| `pnpm dev` | Starts full-stack development server with Vite middleware |
-| `pnpm build` | Builds both frontend bundle and Node server |
-| `pnpm start` | Runs the compiled server from `dist/index.js` |
-| `pnpm check` | Runs TypeScript type checking (`tsc --noEmit`) |
-| `pnpm test` | Runs test suite via Vitest |
-| `pnpm format` | Formats all files with Prettier |
+**NasirPintu** (Mohammad Nasiruddin Pintu)  
+*Creator, Product Architect & Open-Source Builder*
+
+*Building 100% free, private-by-design, serverless digital tools that empower individuals without paywalls, subscriptions, tracking, or data surveillance.*
+
+* **GitHub:** [@nasiropintu](https://github.com/nasiropintu)
+* **X (Twitter):** [@nasiropintu](https://x.com/nasiropintu)
+* **Instagram:** [@the_np2](https://www.instagram.com/the_np2/)
+* **Facebook:** [mohammadnasiruddin.pintu](https://www.facebook.com/mohammadnasiruddin.pintu/)
 
 ---
 
-## License
+## 🤖 Human + AI Collaboration Credits
 
-This project is licensed under the [MIT License](LICENSE).
+Conceived, designed, and architected by **NasirPintu** in active engineering synergy with leading artificial intelligence assistants:
+
+* **Gemini** *(Google DeepMind)* — Architecture, full-stack reasoning & agentic execution.
+* **Manus** *(Manus AI)* — Autonomous workflow planning & synthesis.
+* **ChatGPT** *(OpenAI)* — Logic synthesis & edge-case optimization.
+* **DeepSeek** — Algorithmic engineering & deep code intelligence.
+* **Claude** *(Anthropic)* — Systems reasoning & code clarity.
+* **Vibe by Mistral** *(Mistral AI)* — Fast code generation & pragmatic implementation.
+
+---
+
+## 📜 License
+
+This project is open-source under the [MIT License](LICENSE).
