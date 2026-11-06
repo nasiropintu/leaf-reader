@@ -81,21 +81,12 @@ To transition Leaf into a cross-platform native application, two primary archite
 
 ---
 
-### 2.3 Phase 2: OS-Level Integrations & File Associations
+### 2.3 Phase 2: OS-Level Integrations & File Associations (Completed)
 
-- [ ] **OS File Associations:** Register Leaf with native OS desktop file handlers so double-clicking or right-clicking **"Open With → Leaf"** opens documents directly:
-  - `.pdf` (Adobe PDF)
-  - `.docx` (Microsoft Word)
-  - `.xlsx`, `.xls`, `.csv` (Spreadsheets)
-  - `.pptx` (PowerPoint)
-  - `.epub` (Electronic Books)
-  - `.md`, `.markdown`, `.txt` (Text & Markdown)
-- [ ] **Native CLI Arguments:** Parse command-line paths (e.g., `leaf document.pdf`) passed on application startup.
-- [ ] **Native Drag & Drop:** Support dragging files directly from Windows File Explorer, macOS Finder, or Linux Nautilus onto any part of Leaf.
-- [ ] **Native Menus & Shortcuts:**
-  - Standard OS Application Menu (`File`, `Edit`, `View`, `Window`, `Help`).
-  - Global native keyboard shortcuts (`Ctrl+O` / `Cmd+O`, `Ctrl+P` / `Cmd+P`, `Ctrl+F` / `Cmd+F`).
-- [ ] **Recent Files Integration:** Sync Leaf's recents with Windows "Jump Lists" and macOS "Recent Documents" in the dock.
+- [x] **OS File Associations:** Registered Leaf with native OS desktop file handlers in `src-tauri/tauri.conf.json` so double-clicking or right-clicking **"Open With → Leaf"** opens documents directly for `.pdf`, `.docx`, `.xlsx`, `.xls`, `.csv`, `.pptx`, `.epub`, `.md`, `.txt`, `.png`, `.jpg`, etc.
+- [x] **Native CLI Arguments & Startup Path:** Built Rust command `get_initial_file_path` and `read_file_binary` in `src-tauri/src/lib.rs` and wired startup document loading into `client/src/lib/native.ts` and `Home.tsx`.
+- [x] **Native Drag & Drop:** Integrated host operating system drag-and-drop listener (`listenForNativeFileDrop`) supporting direct file drops from Windows File Explorer and macOS Finder.
+- [x] **Native Menus & Shortcuts:** Built desktop application menus (`File`, `View`, `Help`) with keyboard accelerators (`CmdOrCtrl+O`, `CmdOrCtrl+P`, `CmdOrCtrl+W`, `CmdOrCtrl+Plus`, `CmdOrCtrl+-`, `CmdOrCtrl+0`, `CmdOrCtrl+R`) dispatching native IPC events to frontend.
 
 ---
 

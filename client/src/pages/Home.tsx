@@ -13,7 +13,14 @@ import AboutModal from "@/components/AboutModal";
 import DocInfoModal from "@/components/DocInfoModal";
 import ShortcutsModal from "@/components/ShortcutsModal";
 import NativeTitlebar from "@/components/NativeTitlebar";
-import { isTauri, openNativeFile } from "@/lib/native";
+import {
+  isTauri,
+  openNativeFile,
+  getInitialNativeFilePath,
+  readNativeFileFromPath,
+  listenForNativeFileDrop,
+  listenForNativeMenuEvents,
+} from "@/lib/native";
 import {
   formatFileSize, loadLocalDocument, supportedFormatList,
   type BookChapter, type LoadedDocument, type SpreadsheetSheet,
@@ -841,6 +848,65 @@ export default function Home() {
     window.addEventListener("keydown", handleShortcuts);
     return () => window.removeEventListener("keydown", handleShortcuts);
   }, [documentFile, currentPage, pageCount, preferences.zoom, isZenMode, aboutOpen, infoOpen, shortcutsOpen, themeMenuOpen]);
+
+  // Deep OS integration for Tauri native runtime (file associations, OS drag-drop, native menus)
+  useEffect(() => {
+    if (!isTauri()) return;
+
+    // Check if launched via file association double-click or CLI path argument
+    getInitialNativeFilePath().then((initialPath) => {
+      if (initialPath) {
+        readNativeFileFromPath(initialPath).then((file) => {
+          if (file) void openFile(file);
+        });
+      }
+    });
+
+    // Handle OS-level drag and drop from Windows Explorer / macOS Finder
+    const dropUnlistenPromise = listenForNativeFileDrop((file) => {
+      void openFile(file);
+    });
+
+    // Handle native OS menu accelerators and system menu selections
+    const menuUnlistenPromise = listenForNativeMenuEvents({
+      onOpen: () => {
+        void openPicker();
+      },
+      onPrint: () => {
+        printDocument();
+      },
+      onClose: () => {
+        setDocumentFile(null);
+        setLoadedPdf(null);
+      },
+      onZoomIn: () => {
+        changePreference("fitMode", "manual");
+        changePreference("zoom", Math.min(3, Math.round((preferences.zoom + 0.1) * 10) / 10));
+      },
+      onZoomOut: () => {
+        changePreference("fitMode", "manual");
+        changePreference("zoom", Math.max(0.4, Math.round((preferences.zoom - 0.1) * 10) / 10));
+      },
+      onZoomReset: () => {
+        changePreference("fitMode", "manual");
+        changePreference("zoom", 1);
+      },
+      onRotate: () => {
+        rotateClockwise();
+      },
+      onAbout: () => {
+        setAboutOpen(true);
+      },
+      onShortcuts: () => {
+        setShortcutsOpen(true);
+      },
+    });
+
+    return () => {
+      dropUnlistenPromise.then((unlisten) => unlisten?.());
+      menuUnlistenPromise.then((unlisten) => unlisten?.());
+    };
+  }, [preferences.zoom, documentFile]);
 
   const visibleContent = useMemo(() => {
     if (!documentFile) return null;

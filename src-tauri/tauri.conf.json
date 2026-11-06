@@ -33,6 +33,50 @@
     "shortDescription": "100% free, private-by-design, local-first document reader",
     "longDescription": "Leaf is an open-source, local-first document reader crafted by NasirPintu. All documents are parsed and rendered directly on your device without cloud uploads or accounts.",
     "copyright": "Copyright © 2026 NasirPintu",
+    "fileAssociations": [
+      {
+        "ext": ["pdf"],
+        "name": "PDF Document",
+        "description": "Adobe Portable Document Format",
+        "role": "Viewer"
+      },
+      {
+        "ext": ["docx"],
+        "name": "Word Document",
+        "description": "Microsoft Word Document",
+        "role": "Viewer"
+      },
+      {
+        "ext": ["xlsx", "xls", "csv", "ods"],
+        "name": "Spreadsheet",
+        "description": "Excel or CSV Spreadsheet",
+        "role": "Viewer"
+      },
+      {
+        "ext": ["pptx"],
+        "name": "PowerPoint Presentation",
+        "description": "Microsoft PowerPoint Presentation",
+        "role": "Viewer"
+      },
+      {
+        "ext": ["epub"],
+        "name": "EPUB Book",
+        "description": "Electronic Publication E-Book",
+        "role": "Viewer"
+      },
+      {
+        "ext": ["txt", "md", "markdown", "rtf", "odt", "html", "htm"],
+        "name": "Text & Markdown",
+        "description": "Plain text and Markdown documents",
+        "role": "Viewer"
+      },
+      {
+        "ext": ["png", "jpg", "jpeg", "webp", "gif"],
+        "name": "Image Document",
+        "description": "Standard images",
+        "role": "Viewer"
+      }
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

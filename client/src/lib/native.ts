@@ -14,6 +14,32 @@ export function isTauri(): boolean {
   );
 }
 
+function mimeTypeForExtension(ext: string): string {
+  const mimeMap: Record<string, string> = {
+    pdf: "application/pdf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    xls: "application/vnd.ms-excel",
+    csv: "text/csv",
+    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    epub: "application/epub+zip",
+    txt: "text/plain",
+    md: "text/markdown",
+    markdown: "text/markdown",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    webp: "image/webp",
+    gif: "image/gif",
+    html: "text/html",
+    htm: "text/html",
+    rtf: "application/rtf",
+    odt: "application/vnd.oasis.opendocument.text",
+    ods: "application/vnd.oasis.opendocument.spreadsheet",
+  };
+  return mimeMap[ext.toLowerCase()] ?? "application/octet-stream";
+}
+
 /**
  * Open native OS file picker and return a standard browser File object.
  * Returns null if the user cancelled or if not in Tauri.
@@ -54,36 +80,133 @@ export async function openNativeFile(): Promise<File | null> {
       return null;
     }
 
-    const filePath = selected;
-    const fileName = filePath.replace(/\\/g, "/").split("/").pop() ?? "document";
-    const bytes = await readFile(filePath);
-
-    // Derive mime type from file extension
-    const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
-    const mimeMap: Record<string, string> = {
-      pdf: "application/pdf",
-      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      xls: "application/vnd.ms-excel",
-      csv: "text/csv",
-      pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      epub: "application/epub+zip",
-      txt: "text/plain",
-      md: "text/markdown",
-      markdown: "text/markdown",
-      png: "image/png",
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      webp: "image/webp",
-      gif: "image/gif",
-      html: "text/html",
-      htm: "text/html",
-    };
-
-    const mimeType = mimeMap[ext] ?? "application/octet-stream";
-    return new File([bytes], fileName, { type: mimeType });
+    return await readNativeFileFromPath(selected);
   } catch (error) {
-    console.error("Failed to open native file via Tauri:", error);
+    console.error("Failed to open native file via Tauri dialog:", error);
+    return null;
+  }
+}
+
+/**
+ * Read a file directly from a native path into a web File object
+ */
+export async function readNativeFileFromPath(filePath: string): Promise<File | null> {
+  if (!isTauri()) return null;
+
+  try {
+    const { readFile } = await import("@tauri-apps/plugin-fs");
+    const bytes = await readFile(filePath);
+    const fileName = filePath.replace(/\\/g, "/").split("/").pop() ?? "document";
+    const ext = fileName.split(".").pop() ?? "";
+    return new File([bytes], fileName, { type: mimeTypeForExtension(ext) });
+  } catch (error) {
+    // Fallback: try invoke "read_file_binary"
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const bytes = await invoke<number[]>("read_file_binary", { path: filePath });
+      const uint8 = new Uint8Array(bytes);
+      const fileName = filePath.replace(/\\/g, "/").split("/").pop() ?? "document";
+      const ext = fileName.split(".").pop() ?? "";
+      return new File([uint8], fileName, { type: mimeTypeForExtension(ext) });
+    } catch (fallbackError) {
+      console.error("Failed to read native file from path:", filePath, error, fallbackError);
+      return null;
+    }
+  }
+}
+
+/**
+ * Check if the application was launched with a document file argument (e.g. CLI or double-click OS file association)
+ */
+export async function getInitialNativeFilePath(): Promise<string | null> {
+  if (!isTauri()) return null;
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return await invoke<string | null>("get_initial_file_path");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Listen for native window drag-and-drop events from the host operating system
+ */
+export async function listenForNativeFileDrop(onFile: (file: File) => void): Promise<(() => void) | null> {
+  if (!isTauri()) return null;
+  try {
+    const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    const unlisten = await getCurrentWindow().onDragDropEvent(async (event) => {
+      if (event.payload.type === "drop" && event.payload.paths && event.payload.paths.length > 0) {
+        const filePath = event.payload.paths[0];
+        const file = await readNativeFileFromPath(filePath);
+        if (file) {
+          onFile(file);
+        }
+      }
+    });
+    return unlisten;
+  } catch (error) {
+    console.error("Failed to register native drag drop listener:", error);
+    return null;
+  }
+}
+
+export interface NativeMenuHandlers {
+  onOpen?: () => void;
+  onPrint?: () => void;
+  onClose?: () => void;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onZoomReset?: () => void;
+  onRotate?: () => void;
+  onAbout?: () => void;
+  onShortcuts?: () => void;
+}
+
+/**
+ * Listen for native OS menu items triggered via top menu bar or native accelerators
+ */
+export async function listenForNativeMenuEvents(handlers: NativeMenuHandlers): Promise<(() => void) | null> {
+  if (!isTauri()) return null;
+  try {
+    const { listen } = await import("@tauri-apps/api/event");
+    const unlisteners: Array<() => void> = [];
+
+    if (handlers.onOpen) {
+      unlisteners.push(await listen("leaf:menu-open", () => handlers.onOpen?.()));
+    }
+    if (handlers.onPrint) {
+      unlisteners.push(await listen("leaf:menu-print", () => handlers.onPrint?.()));
+    }
+    if (handlers.onClose) {
+      unlisteners.push(await listen("leaf:menu-close", () => handlers.onClose?.()));
+    }
+    if (handlers.onZoomIn) {
+      unlisteners.push(await listen("leaf:menu-zoom-in", () => handlers.onZoomIn?.()));
+    }
+    if (handlers.onZoomOut) {
+      unlisteners.push(await listen("leaf:menu-zoom-out", () => handlers.onZoomOut?.()));
+    }
+    if (handlers.onZoomReset) {
+      unlisteners.push(await listen("leaf:menu-zoom-reset", () => handlers.onZoomReset?.()));
+    }
+    if (handlers.onRotate) {
+      unlisteners.push(await listen("leaf:menu-rotate", () => handlers.onRotate?.()));
+    }
+    if (handlers.onAbout) {
+      unlisteners.push(await listen("leaf:menu-about", () => handlers.onAbout?.()));
+    }
+    if (handlers.onShortcuts) {
+      unlisteners.push(await listen("leaf:menu-shortcuts", () => handlers.onShortcuts?.()));
+    }
+
+    return () => {
+      for (const unlisten of unlisteners) {
+        unlisten();
+      }
+    };
+  } catch (error) {
+    console.error("Failed to register native menu listeners:", error);
     return null;
   }
 }
